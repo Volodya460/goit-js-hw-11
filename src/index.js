@@ -3,16 +3,18 @@ import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import debounce from 'lodash.debounce';
+import { ApiService } from './fetch';
 
-let inputValue = '';
-let page = 1;
-let quantityImg = 0;
+const apiService = new ApiService();
+// let inputValue = '';
+// let page = 1;
+// let quantityImg = 0;
 
 const boxImagesEl = document.querySelector('.gallery');
 const searchFormEl = document.querySelector('.search-form');
 const loadMoreEl = document.querySelector('.load-more');
 window.addEventListener('scroll', debounce(checkPosition, 300));
-window.addEventListener('resize', debounce(checkPosition, 300));
+// window.addEventListener('resize', debounce(checkPosition, 300));
 
 loadMoreEl.classList.add('is-hidden');
 searchFormEl.addEventListener('submit', onSubmitForm);
@@ -20,45 +22,46 @@ loadMoreEl.addEventListener('click', onClickButtonMore);
 
 function onSubmitForm(eve) {
   eve.preventDefault();
+
   loadMoreEl.classList.add('is-hidden');
-  inputValue = eve.currentTarget.elements.searchQuery.value.trim();
+  apiService.inputValue = eve.currentTarget.elements.searchQuery.value.trim();
 
   clearMarkup();
 
-  if (!inputValue) {
+  if (!apiService.inputValue) {
     messageInfo('Write something');
     return;
   }
 
-  resetPage();
-  resetQuantityImg();
+  apiService.resetPage();
+  apiService.resetQuantityImg();
   getResponseData();
 
   eve.currentTarget.reset();
 }
 
-async function fetchImages() {
-  const BASE_URL = 'https://pixabay.com/api/';
+// async function fetchImages() {
+//   const BASE_URL = 'https://pixabay.com/api/';
 
-  const searchParams = new URLSearchParams({
-    key: `33272220-12aa76911a3763f30e85ef70a`,
-    image_type: 'photo',
-    orientation: 'horizontal',
-    safesearch: true,
-    per_page: 40,
-  });
-  return await axios
-    .get(`${BASE_URL}?${searchParams}&q=${inputValue}&page=${page}`)
-    .then(response => {
-      return response.data;
-    })
-    .catch(error => messageError(error));
-}
+//   const searchParams = new URLSearchParams({
+//     key: `33272220-12aa76911a3763f30e85ef70a`,
+//     image_type: 'photo',
+//     orientation: 'horizontal',
+//     safesearch: true,
+//     per_page: 40,
+//   });
+//   return await axios
+//     .get(`${BASE_URL}?${searchParams}&q=${inputValue}&page=${page}`)
+//     .then(response => {
+//       return response.data;
+//     })
+//     .catch(error => messageError(error));
+// }
 
 async function getResponseData() {
   try {
-    const { hits, totalHits } = await fetchImages();
-    quantityImg += hits.length;
+    const { hits, totalHits } = await apiService.fetchImages();
+    apiService.f;
 
     if (!hits.length) {
       messageError(
@@ -68,7 +71,7 @@ async function getResponseData() {
       return;
     }
 
-    if (quantityImg === totalHits) {
+    if (apiService.quantityImg === totalHits) {
       messageInfo("We're sorry, but you've reached the end of search results.");
 
       addCreatListImage(hits);
@@ -89,7 +92,7 @@ async function getResponseData() {
 }
 
 function onClickButtonMore(eve) {
-  pagePlus();
+  apiService.pagePlus();
   getResponseData();
 }
 
@@ -97,6 +100,7 @@ function addCreatListImage(images) {
   const listImages = images
     .map(
       ({
+        id,
         webformatURL,
         tags,
         likes,
@@ -106,6 +110,7 @@ function addCreatListImage(images) {
         largeImageURL,
       }) => {
         return `<div class="photo-card">
+
   <a class='photo-link' href="${largeImageURL}">
   <img class='photo-img' src="${webformatURL}" alt="${tags}" loading="lazy" />
   </a>  
@@ -114,6 +119,7 @@ function addCreatListImage(images) {
       <b>Likes </b><br>
       ${likes}
     </p>
+    <p class="info-item">id=${id}</p>
     <p class="info-item">
       <b>Views </b><br>
       ${views}
@@ -136,15 +142,15 @@ function addCreatListImage(images) {
   boxImagesEl.insertAdjacentHTML('beforeend', listImages);
 }
 
-function pagePlus() {
-  page += 1;
-}
-function resetPage() {
-  page = 1;
-}
-function resetQuantityImg() {
-  quantityImg = 0;
-}
+// function pagePlus() {
+//   page += 1;
+// }
+// function resetPage() {
+//   page = 1;
+// }
+// function resetQuantityImg() {
+//   quantityImg = 0;
+// }
 
 function clearMarkup() {
   boxImagesEl.innerHTML = '';
